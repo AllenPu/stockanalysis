@@ -1,0 +1,382 @@
+---
+title: "hw4"
+author: "Ruizhi Pu"
+date: "3/3/2018"
+output: html_document
+---
+
+import the data
+```{r}
+setwd("/Users/ruizhipu/Desktop")
+df = read.csv("stock_price.csv",header = TRUE)
+df = t(df)
+```
+
+dimension of the data
+```{r}
+dim(df)
+```
+
+##TASK 1
+
+##Use PCA to reduce the dimension of stock-price information. Generate a screeplot and determine the number of principle components based on this plot. Plot the loadings for first principal component.
+```{r}
+pcastock = prcomp(df,scale= TRUE)
+#pcastock
+summary(pcastock)
+#the loadings
+#pcastock$rotation
+stockpc = predict(pcastock)
+plot(pcastock, main="screenplot")
+mtext(side=1, "Stock Price Principal Components",  line=1, font=2)
+```
+So, maybe we can choose the PC1 as the principle component
+
+```{r}
+plot(x = c(1:30),y = stockpc[,1], xlab = "index of the stock", ylab = "loadings of the PC1",main = "loadings for first principal componen")
+```
+
+##Generate a scatterplot to project stocks on the first two principal components.
+```{r}
+plot(stockpc[,1:2], type="n",main = "first two principal components")
+text(x=stockpc[,1], y=stockpc[,2], labels=row.names(df))
+```
+##Generate an MDS map to plot stocks on a two-dimensional space.
+```{r}
+#set.seed(851982)
+stock.dis = dist(df)
+stock.mds <- cmdscale(stock.dis)
+plot(stock.mds,type = 'n',main = "MDS map")
+text(stock.mds, labels=row.names(df))
+```
+##Use k-means and hierarchical clustering to group stocks. Specifically, you will generate 8 MDS maps for the stocks and color the stocks based on different clustering methods (k-means, h-clustering with single-link, h-clustering with complete-link, h-clustering with average-link) and different number of clusters (k = 3, k = 6). For each hierarchical clustering method, generate a dendrogram.
+##hint: Standardize the data before performing clustering
+
+
+k-means k = 3
+```{r}
+set.seed(1)
+knnstock = kmeans(df, centers=3, nstart=10)
+#knnstock
+o=order(knnstock$cluster)
+dfk3 = data.frame(row.names(df)[o],knnstock$cluster[o])
+#dfk3
+plot(stock.mds,type = 'n',main = "k-means k = 3")
+text(stock.mds, labels=row.names(df),col = knnstock$cluster+1)
+```
+
+k-means k = 6
+```{r}
+set.seed(1)
+knnstock = kmeans(df, centers=6, nstart=10)
+#knnstock
+o=order(knnstock$cluster)
+dfk6 = data.frame(row.names(df)[o],knnstock$cluster[o])
+#dfk6
+plot(stock.mds,type = 'n',main = "k-means k = 6")
+text(stock.mds, labels=row.names(df),col = knnstock$cluster+1)
+```
+
+
+```{r}
+library(cluster)
+```
+##k = 3
+
+h-clustering with single-link
+```{r}
+df2 = scale(df)
+stock2agg = agnes(df2,diss = FALSE,metric="euclidian",stand = TRUE,method = "single")
+stock2agg
+data.dis = dist(df)
+hcstock = hclust(data.dis,method='single')
+hcstock1 = cutree(hcstock,k=3)
+print(hcstock1)
+```
+dendrogram single-link
+```{r}
+plot(stock2agg, which.plots=2)
+```
+MDS plot
+```{r}
+plot(stock.mds,type = 'n')
+text(stock.mds, labels=row.names(df), col = hcstock1+1)
+```
+
+h-clustering with complete-link
+```{r}
+stock2agg = agnes(df2,diss = FALSE,metric="euclidian",stand = TRUE,method = "complete")
+stock2agg
+data.dis = dist(df)
+hcstock = hclust(data.dis,method='complete')
+hcstock = cutree(hcstock,k=3)
+print(hcstock)
+```
+dendrogram complete-link
+```{r}
+plot(stock2agg, which.plots=2)
+```
+MDS plot
+```{r}
+plot(stock.mds,type = 'n')
+text(stock.mds, labels=row.names(df), col = hcstock+1)
+```
+h-clustering with average-link
+```{r}
+stock2agg = agnes(df2,diss = FALSE,metric="euclidian",stand = TRUE,method = "average")
+stock2agg
+data.dis = dist(df)
+hcstock = hclust(data.dis,method='average')
+hcstock = cutree(hcstock,k=3)
+print(hcstock)
+```
+dendrogram average-link
+```{r}
+plot(stock2agg, which.plots=2)
+```
+MDS plot
+```{r}
+plot(stock.mds,type = 'n')
+text(stock.mds, labels=row.names(df), col = hcstock+1)
+```
+##k = 6
+
+h-clustering with single-link
+```{r}
+df2 = df
+stock2agg = agnes(df2,diss = FALSE,metric="euclidian",stand = TRUE,method = "single")
+stock2agg
+data.dis = dist(df)
+hcstock = hclust(data.dis,method='single')
+hcstock = cutree(hcstock,k=6)
+print(hcstock)
+```
+dendrogram single-link
+```{r}
+plot(stock2agg, which.plots=2)
+```
+MDS plot
+```{r}
+plot(stock.mds,type = 'n')
+text(stock.mds, labels=row.names(df), col = hcstock+1)
+```
+h-clustering with complete-link
+```{r}
+stock2agg = agnes(df2,diss = FALSE,metric="euclidian",stand = TRUE,method = "complete")
+stock2agg
+data.dis = dist(df)
+hcstock = hclust(data.dis,method='complete')
+hcstock = cutree(hcstock,k=6)
+print(hcstock)
+```
+dendrogram complete-link
+```{r}
+plot(stock2agg, which.plots=2)
+```
+MDS plot
+```{r}
+plot(stock.mds,type = 'n')
+text(stock.mds, labels=row.names(df), col = hcstock+1)
+```
+h-clustering with average-link
+```{r}
+stock2agg = agnes(df2,diss = FALSE,metric="euclidian",stand = TRUE,method = "average")
+stock2agg
+data.dis = dist(df)
+hcstock = hclust(data.dis,method='average')
+hcstock = cutree(hcstock,k=6)
+print(hcstock)
+```
+dendrogram average-link
+```{r}
+plot(stock2agg, which.plots=2)
+```
+MDS plot
+```{r}
+plot(stock.mds,type = 'n')
+text(stock.mds, labels=row.names(df), col = hcstock+1)
+```
+
+##TASK 2
+```{r}
+library(foreign)
+dfvt = read.dta("sen113kh.dta")
+df10086 = subset(dfvt, state < 99)
+dfvote = df10086[,-c(1:9)]
+```
+##Create a senator-by-senator distance matrix for the 113th Congress. Generate an MDS plot to project the senators on the two dimensional space. Use shapes or colors to differentiate the senators’ party affliation
+
+the distance matrix is ex.vote
+```{r}
+ex.vote = as.matrix(dfvote) %*% t(dfvote)
+#ex.dist = dist(ex.vote)
+#ex.mds = cmdscale(ex.dist)
+#plot(ex.mds, type = 'n')
+#text(ex.mds,dt[,9],col = dt[,6]+1)
+```
+
+```{r}
+
+  no.pres <- subset(dfvt, state < 99)
+  ## to group all Yea and Nay types together
+  for(i in 10:ncol(no.pres)) {
+    no.pres[,i] = ifelse(no.pres[,i] > 6, 0, no.pres[,i])
+    no.pres[,i] = ifelse(no.pres[,i] > 0 & no.pres[,i] < 4, 1, no.pres[,i])
+    no.pres[,i] = ifelse(no.pres[,i] > 1, -1, no.pres[,i])
+  }
+  dt <- as.matrix(no.pres[,10:ncol(no.pres)])
+
+
+```
+
+```{r}
+library(ggplot2)
+rollcall.dist = dist(dt)
+rollcall.mds = cmdscale(rollcall.dist)
+congress = subset(dfvt, state < 99)
+congress.names = sapply(as.character(congress$name), function(n) strsplit(n, "[, ]")[[1]][1])
+
+rollcall.mds = transform(rollcall.mds,
+                name = congress.names,
+                party = as.factor(congress$party))
+
+mds = ggplot(rollcall.mds, aes(x = X1, y = X2)) +
+                scale_alpha(guide="none") + theme_bw() +
+                theme(axis.ticks = element_blank(),
+                axis.text.x = element_blank(),
+                axis.text.y = element_blank()) +
+                xlab("") +
+                ylab("") +
+                scale_shape(name = "party", breaks = c("100", "200", "328"),
+                            labels = c("Dem.", "Rep.", "Ind."), solid = FALSE) +
+                scale_color_manual(name = "party", values = c("100" = "blue",
+                                                              "200" = "red",
+                                                              "328"="green"),
+                                                              breaks = c("100", "200", "328"),
+                                                              labels = c("Dem.", "Rep.", "Ind.")
+                                   )
+print(mds + geom_point(aes(shape = party,
+                           color = party,
+                                alpha = 0.75),size=3))
+ex.mds = rollcall.mds
+```
+
+
+```{r}
+print(mds + geom_text(aes(color = party,
+                          alpha = 0.75,
+                          label = rollcall.mds$name),size=3))
+```
+
+
+##Use k-means and hierarchical clustering to group the senators, and color the senators on the MDS plots based on the clustering results (you will use k-means, h-clustering with single-link, h-clustering with complete-link, h-clustering with average-link and k=2).
+k-means , k =2
+```{r}
+set.seed(1)
+dfvote = scale(dt)
+knnvote = kmeans(dfvote,centers = 2,nstart = 10)
+plot(x = ex.mds[,1], y =  ex.mds[,2],type = 'n',main = "k-means , k =2")
+text(x = ex.mds[,1], y =  ex.mds[,2],labels = rollcall.mds$name,col = knnvote$cluster+1)
+```
+
+h-clustering with single-link
+```{r}
+data.dis = dist(dt)
+hcstock1 = hclust(data.dis,method='single')
+hccut1 = cutree(hcstock1,k=2)
+print(hcstock1)
+plot(x = ex.mds[,1], y = ex.mds[,2], type = 'n',main="h-clustering with single-link, k=2")
+text(x = ex.mds[,1], y = ex.mds[,2],labels = ex.mds$name,col = hccut1+1)
+```
+
+h-clustering with complete-link
+```{r}
+data.dis = dist(dt)
+hcstock1 = hclust(data.dis,method='complete')
+hccut2 = cutree(hcstock1,k=2)
+print(hccut2)
+plot(x = ex.mds[,1], y = ex.mds[,2], type = 'n',main="h-clustering with complete-link, k=2")
+text(x = ex.mds[,1], y = ex.mds[,2],labels = ex.mds$name,col = hccut2+1)
+#data.dis = dist(dfvote)
+#hcstock2 = hclust(data.dis,method='complete')
+#hcstock2 = cutree(hcstock2,k=2)
+#print(hcstock2)
+#plot(ex.mds[,1:2], type = 'n')
+#text(ex.mds[,1:2],dt[,9],col = hcstock2+1)
+```
+
+h-clustering with average-link
+```{r}
+#data.dis = dist(dfvote)
+#hcstock3 = hclust(data.dis,method='average')
+dt = scale(dt)
+hcvote = agnes(dt,diss = FALSE,metric = "euclidian",method = "average")
+hccut3 = cutree(hcvote,k=2)
+print(hccut3)
+#plot(hcstock3,which.plots = 2)
+#plot(ex.mds[,1:2], type = 'n')
+#text(ex.mds[,1:2],dt[,9],col = hcstock3+1)
+plot(x = ex.mds[,1], y = ex.mds[,2], type = 'n',main="h-clustering with average-link, k=2")
+text(x = ex.mds[,1], y = ex.mds[,2],labels = ex.mds$name,col = hccut3+1)
+```
+
+##Compare the clustering results with the party labels and identify the party members who are assigned to a seemly wrong cluster. Specifically, based on the k-means results, which Republicans are clustered together with Democrats, and vice versa? And based on the three variants (single-link, complete-link and average-link), which Republicans are clustered together with Democrats, and vice versa?
+As we can see from the picture, for k means, the Mr. KERRY, COLLINS,MURKOWSKI, LAUTENBERG are wrongly assigned as Democrat; for h-clustering with single-link ,most of the  Democrats are assigned as Republicans; for h-clustering with complete-link, Mr. MURKOWSKI, COLLINS, CHIESA,are wrongly assigned as Democrats, for h-clustering with average-link, Mr. MURKOWSKI, COLLINS, CHIESA,are wrongly assigned as Democrats.
+
+
+```{r}
+cluster.purity <- function(clusters, classes) {
+  sum(apply(table(classes, clusters), 2, max)) / length(clusters)
+}
+
+cluster.entropy <- function(clusters,classes) {
+  en <- function(x) {
+    s = sum(x)
+    sum(sapply(x/s, function(p) {if (p) -p*log2(p) else 0} ) )
+  }
+  M = table(classes, clusters)
+  m = apply(M, 2, en)
+  c = colSums(M) / sum(M)
+  sum(m*c)
+}
+
+```
+
+##Compute the purity and entropy for these clustering results with respect to the senators’ party labels. You will generate a 2x4 table
+```{r}
+
+cluster2 = as.vector(knnvote$cluster)
+class = rollcall.mds$party
+kmp = cluster.purity(cluster2,class)
+kme = cluster.entropy(cluster2,class)
+
+cluster2 = as.vector(hccut1)
+sp = cluster.purity(cluster2,class)
+se = cluster.entropy(cluster2,class)
+
+
+cluster2 = as.vector(hccut2)
+ce = cluster.purity(cluster2,class)
+cp = cluster.entropy(cluster2,class)
+
+cluster2 = as.vector(hccut3)
+ae = cluster.purity(cluster2,class)
+ap = cluster.entropy(cluster2,class)
+
+table = matrix(c(kmp,kme,sp,se,ce,cp,ae,ap),ncol= 4,byrow = FALSE)
+colnames(table) <- c("k-means","hclust-single","hclust-complete","hclust-average")
+rownames(table) <- c("Purity","Entropy")
+table <- as.table(table)
+table
+```
+
+
+##Based on your observation on both measures and mis-classified members, choose two clustering methods that generate the most meaningful results and explain why.
+
+H-clustering with complete-link and h-clust-average are the best two that generate the most meaningful results, because we can see from the picture that they have the least mis-classified results and also , they have the high Purity (h-clust-complet&kmeans) and the low Entropy(k-means) value. Maybe the pair-wise distances between the data points is a better choice for the distance calculation for the clusters and data are connected in pairs.And thus also kmeans may not be able to form the best clusters, the wrong assigned data in the single link model may have "chain effects of forming the cluster because of it is sensitive to noise in the data. 
+
+
+
+
+
+ 
